@@ -81,6 +81,153 @@ extern Company *DoStartupNewCompany(bool is_ai, CompanyID company = INVALID_COMP
 extern void ShowOSErrorBox(const char *buf, bool system);
 extern char *_config_file;
 
+
+
+#include <gnutls/gnutls.h>
+#include <gnutls/x509.h>
+
+#define MAX_BUF 1024
+#define MSG "GET / HTTP/1.1\r\nHost: secure.openttd.org\r\n\r\n"
+#define HOSTNAME "secure.openttd.org"
+#define ADDRESS "178.33.34.239"
+
+int tcp_connect(void)
+{
+	const char *PORT = "443";
+	const char *SERVER = ADDRESS;
+	int err, sd;
+	struct sockaddr_in sa;
+
+	sd = socket(AF_INET, SOCK_STREAM, 0);
+
+	memset(&sa, '\0', sizeof(sa));
+	sa.sin_family = AF_INET;
+	sa.sin_port = htons(atoi(PORT));
+	sa.sin_addr.s_addr = inet_addr(SERVER);
+
+	err = connect(sd, (struct sockaddr *)&sa, sizeof(sa));
+	if (err < 0) {
+		fprintf(stderr, "Connect error\n");
+		return -1;
+	}
+
+	return sd;
+}
+
+void tcp_close(int sd)
+{
+	closesocket(sd);
+}
+
+void TLSTest()
+{
+	int ret, sd;
+	gnutls_session_t session;
+	char buffer[MAX_BUF + 1];
+	gnutls_certificate_credentials_t xcred;
+
+	gnutls_global_init();
+
+	/* Create the credentials; use system CAs */
+	gnutls_certificate_allocate_credentials(&xcred);
+	ret = gnutls_certificate_set_x509_system_trust(xcred);
+	if (ret == GNUTLS_E_UNIMPLEMENTED_FEATURE) {
+		fprintf(stderr, "OS doesn't have known system CA store\n");
+		return;
+	}
+
+	/* Create the session; set DNS name and priority */
+	gnutls_init(&session, GNUTLS_CLIENT);
+	gnutls_server_name_set(session, GNUTLS_NAME_DNS, HOSTNAME, strlen(HOSTNAME));
+	gnutls_priority_set_direct(session, "NORMAL", NULL);
+
+	/* Link credentials to session */
+	gnutls_credentials_set(session, GNUTLS_CRD_CERTIFICATE, xcred);
+
+	/* Create socket and link to session */
+	sd = tcp_connect();
+	if (sd < 0) return;
+	gnutls_transport_set_int(session, sd);
+	gnutls_handshake_set_timeout(session, GNUTLS_DEFAULT_HANDSHAKE_TIMEOUT);
+
+	/* Do the handshake */
+	do {
+		ret = gnutls_handshake(session);
+		printf("-- %d %s\n", ret, gnutls_strerror(ret));
+	} while (ret < 0 && gnutls_error_is_fatal(ret) == 0);
+
+	if (ret < 0) {
+		fprintf(stderr, "*** Handshake failed\n");
+		gnutls_perror(ret);
+		goto end;
+	} else {
+		char *desc;
+
+		desc = gnutls_session_get_desc(session);
+		printf("- Session info: %s\n", desc);
+//		gnutls_free(desc);
+	}
+
+	/* Verify the certificate */
+	{
+		unsigned int status = 0;
+		int ret;
+		gnutls_certificate_type_t type;
+		const char *hostname;
+		gnutls_datum_t out;
+
+		hostname = HOSTNAME;
+
+		ret = gnutls_certificate_verify_peers3(session, hostname, &status);
+		if (ret < 0) {
+			printf("Error1 %s %d\n", hostname, ret);
+			goto end;
+		}
+
+		type = gnutls_certificate_type_get(session);
+		gnutls_certificate_verification_status_print(status, type, &out, 0);
+		printf ("%s\n", out.data);
+
+//		gnutls_free(out.data);
+
+		if (status != 0) goto end;
+	}
+
+	/* Send the information */
+	gnutls_record_send(session, MSG, strlen (MSG));
+
+	/* Receive the information */
+	ret = gnutls_record_recv(session, buffer, MAX_BUF);
+	if (ret == 0) {
+		printf ("- Peer has closed the TLS connection\n");
+		goto end;
+	} else if (ret < 0 && gnutls_error_is_fatal (ret) == 0) {
+		fprintf (stderr, "*** Warning: %s\n", gnutls_strerror(ret));
+	} else if (ret < 0) {
+		fprintf (stderr, "*** Error: %s\n", gnutls_strerror(ret));
+		goto end;
+	}
+
+	if (ret > 0) {
+		printf ("- Received %d bytes: ", ret);
+		for (int ii = 0; ii < ret; ii++) {
+			fputc(buffer[ii], stdout);
+		}
+		fputs("\n", stdout);
+	}
+
+	gnutls_bye(session, GNUTLS_SHUT_RDWR);
+
+end:
+	/* Clean up everything */
+	tcp_close(sd);
+	gnutls_deinit(session);
+	gnutls_certificate_free_credentials(xcred);
+	gnutls_global_deinit();
+}
+
+
+
 /**
  * Error handling for fatal user errors.
  * @param s the string to print.
@@ -844,6 +991,8 @@ int openttd_main(int argc, char *argv[])
 	/* Take our initial lock on whatever we might want to do! */
 	_modal_progress_paint_mutex->BeginCritical();
 	_modal_progress_work_mutex->BeginCritical();
+
+	TLSTest();
 
 	GenerateWorld(GWM_EMPTY, 64, 64); // Make the viewport initialization happy
 	WaitTillGeneratedWorld();
