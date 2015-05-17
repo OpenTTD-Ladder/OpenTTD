@@ -17,6 +17,7 @@
 #include "../../debug.h"
 #include "os_abstraction.h"
 #include "packet.h"
+#include "tcp_tls.h"
 
 #include "../../safeguards.h"
 
@@ -32,6 +33,8 @@ struct Library *SocketBase = NULL;
  */
 bool NetworkCoreInitialize()
 {
+	NetworkTLSSocketHandler::Initialize();
+
 #if defined(__MORPHOS__) || defined(__AMIGA__)
 	/*
 	 *  IMPORTANT NOTE: SocketBase needs to be initialized before we use _any_

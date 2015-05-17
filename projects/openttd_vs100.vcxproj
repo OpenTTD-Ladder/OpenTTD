@@ -1224,6 +1224,8 @@
     <ClInclude Include="..\src\network\core\tcp_listen.h" />
     <ClCompile Include="..\src\network\core\tcp_packet.cpp" />
     <ClInclude Include="..\src\network\core\tcp_packet.h" />
+    <ClCompile Include="..\src\network\core\tcp_tls.cpp" />
+    <ClInclude Include="..\src\network\core\tcp_tls.h" />
     <ClCompile Include="..\src\network\core\udp.cpp" />
     <ClInclude Include="..\src\network\core\udp.h" />
     <ClInclude Include="..\src\pathfinder\follow_track.hpp" />

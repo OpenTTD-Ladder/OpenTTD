@@ -4260,6 +4260,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\..\src\network\core\tcp_tls.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\..\src\network\core\tcp_tls.h"
+				>
+			</File>
+			<File
 				RelativePath=".\..\src\network\core\udp.cpp"
 				>
 			</File>

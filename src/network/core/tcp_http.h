@@ -14,7 +14,7 @@
 #ifndef NETWORK_CORE_TCP_HTTP_H
 #define NETWORK_CORE_TCP_HTTP_H
 
-#include "core.h"
+#include "tcp_tls.h"
 #include "tcp_connecter.h"
 
 #ifdef ENABLE_NETWORK
@@ -40,31 +40,20 @@ struct HTTPCallback {
 };
 
 /** Base socket handler for HTTP traffic. */
-class NetworkHTTPSocketHandler : public NetworkSocketHandler {
+class NetworkHTTPSocketHandler : public NetworkTLSSocketHandler {
 private:
 	char recv_buffer[4096];   ///< Partially received message.
 	int recv_pos;             ///< Current position in buffer.
 	int recv_length;          ///< Length of the data still retrieving.
 	HTTPCallback *callback;   ///< The callback to call for the incoming data.
+	const char *url;          ///< The URL we want to get at the server.
+	const char *host;         ///< The host of the server we connect to.
 	const char *data;         ///< The (POST) data we might want to forward (to a redirect).
 	int redirect_depth;       ///< The depth of the redirection.
 
 	int HandleHeader();
 	int Receive();
 public:
-	SOCKET sock;              ///< The socket currently connected to
-
-	/**
-	 * Whether this socket is currently bound to a socket.
-	 * @return true when the socket is bound, false otherwise
-	 */
-	bool IsConnected() const
-	{
-		return this->sock != INVALID_SOCKET;
-	}
-
-	virtual NetworkRecvStatus CloseConnection(bool error = true);
-
 	NetworkHTTPSocketHandler(SOCKET sock, HTTPCallback *callback,
 			const char *host, const char *url, const char *data, int depth);
 
@@ -72,6 +61,8 @@ public:
 
 	static int Connect(char *uri, HTTPCallback *callback,
 			const char *data = NULL, int depth = 0);
+
+	bool OnConnected();
 
 	static void HTTPReceive();
 };
@@ -106,20 +97,21 @@ public:
 	/** Free all our allocated data. */
 	~NetworkHTTPContentConnecter()
 	{
-		free(this->url);
 	}
 
 	virtual void OnFailure()
 	{
 		this->callback->OnFailure();
 		free(this->data);
+		free(this->url);
 	}
 
 	virtual void OnConnect(SOCKET s)
 	{
 		new NetworkHTTPSocketHandler(s, this->callback, this->address.GetHostname(), this->url, this->data, this->depth);
-		/* We've relinquished control of data now. */
+		/* We've relinquished control of url and data now. */
 		this->data = NULL;
+		this->url = NULL;
 	}
 };
 
