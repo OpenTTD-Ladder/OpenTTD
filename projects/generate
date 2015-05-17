@@ -61,7 +61,7 @@ file_prefix="..\\\\src\\\\"
 
 safety_check() {
 	li=""
-	for i in `cat $1 | grep -v "#\|ottdres.rc\|win32.cpp\|win32_v.cpp" | xargs -n 1 basename | sort`; do
+	for i in `cat "$1" | grep -v "#\|ottdres.rc\|win32.cpp\|win32_v.cpp" | xargs -n 1 basename | sort`; do
 		if [ "$li" = "$i" ]; then
 			echo " !! ERROR !!"
 			echo ""
@@ -88,7 +88,7 @@ rm tmp.headers.*
 
 load_main_data() {
 	# Read the source.list and process it
-	RES="`cat $1 | tr '\r' '\n' | awk '
+	RES="`cat "$1" | tr '\r' '\n' | awk '
 		/^(	*)#end/  { if (deep == skip) { skip -= 1; } deep -= 1; next; }
 		/^(	*)#else/ { if (deep == skip) { skip -= 1; } else if (deep - 1 == skip) { skip += 1; } next; }
 		/^(	*)#if/   {
@@ -174,9 +174,9 @@ load_main_data() {
 
 load_lang_data() {
 	RES=""
-	for i in `ls $1`
+	for i in `ls "$1"*.txt`
 	do
-		i=`basename $i | sed s~.txt$~~g`
+		i=`basename "$i" | sed s~.txt$~~g`
 		if [ "$i" == "english" ]
 		then
 			continue
@@ -215,9 +215,9 @@ load_settings_data() {
 	RES=""
 	RES2="
 #3..\\objs\\settings\\settings_gen.exe -o ..\\objs\\settings\\table\\settings.h -b ..\\src\\table\\settings.h.preamble -a ..\\src\\table\\settings.h.postamble"
-	for i in `ls $1`
+	for i in `ls "$1"*.ini`
 	do
-		i=`basename $i`
+		i=`basename "$i"`
 		RES="$RES
 #1		<File
 #1			RelativePath=\"..\\src\\table\\"$i"\"
@@ -285,18 +285,22 @@ generate() {
 
 safety_check "$ROOT_DIR/source.list"
 
+# Allow spaces in ROOT_DIR
+IFS='
+'
+
 load_main_data "$ROOT_DIR/source.list" openttd
 openttdfiles=`echo "$openttd" | grep "^#4" | sed "s~#4~~g"`
 openttdfilters=`echo "$openttd" | grep "^#3" | sed "s~#3~~g"`
 openttdvcxproj=`echo "$openttd" | grep "^#2" | sed "s~#2~~g"`
 openttd=`echo "$openttd" | grep "^#1" | sed "s~#1~~g"`
 
-load_lang_data "$ROOT_DIR/src/lang/*.txt" lang
+load_lang_data "$ROOT_DIR/src/lang/" lang
 langfiles=`echo "$lang" | grep "^#3" | sed "s~#3~~g"`
 langvcxproj=`echo "$lang" | grep "^#2" | sed "s~#2~~g"`
 lang=`echo "$lang" | grep "^#1" | sed "s~#1~~g"`
 
-load_settings_data "$ROOT_DIR/src/table/*.ini" settings
+load_settings_data "$ROOT_DIR/src/table/" settings
 settingsfiles=`echo "$settings" | grep "^#4" | sed "s~#4~~g"`
 settingscommand=`echo "$settings" | grep "^#3" | sed "s~#3~~g"`
 settingsvcxproj=`echo "$settings" | grep "^#2" | sed "s~#2~~g"`
