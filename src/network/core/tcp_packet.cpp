@@ -16,7 +16,7 @@
 #include "../../stdafx.h"
 #include "../../debug.h"
 
-#include "tcp.h"
+#include "tcp_packet.h"
 
 #include "../../safeguards.h"
 
@@ -24,14 +24,14 @@
  * Construct a socket handler for a TCP connection.
  * @param s The just opened TCP connection.
  */
-NetworkTCPSocketHandler::NetworkTCPSocketHandler(SOCKET s) :
+NetworkTCPPacketSocketHandler::NetworkTCPPacketSocketHandler(SOCKET s) :
 		NetworkSocketHandler(),
 		packet_queue(NULL), packet_recv(NULL),
 		sock(s), writable(false)
 {
 }
 
-NetworkTCPSocketHandler::~NetworkTCPSocketHandler()
+NetworkTCPPacketSocketHandler::~NetworkTCPPacketSocketHandler()
 {
 	this->CloseConnection();
 
@@ -39,7 +39,7 @@ NetworkTCPSocketHandler::~NetworkTCPSocketHandler()
 	this->sock = INVALID_SOCKET;
 }
 
-NetworkRecvStatus NetworkTCPSocketHandler::CloseConnection(bool error)
+NetworkRecvStatus NetworkTCPPacketSocketHandler::CloseConnection(bool error)
 {
 	this->writable = false;
 	NetworkSocketHandler::CloseConnection(error);
@@ -62,7 +62,7 @@ NetworkRecvStatus NetworkTCPSocketHandler::CloseConnection(bool error)
  * if the OS-network-buffer is full)
  * @param packet the packet to send
  */
-void NetworkTCPSocketHandler::SendPacket(Packet *packet)
+void NetworkTCPPacketSocketHandler::SendPacket(Packet *packet)
 {
 	Packet *p;
 	assert(packet != NULL);
@@ -96,7 +96,7 @@ void NetworkTCPSocketHandler::SendPacket(Packet *packet)
  * @return \c true if a (part of a) packet could be sent and
  *         the connection is not closed yet.
  */
-SendPacketsState NetworkTCPSocketHandler::SendPackets(bool closing_down)
+SendPacketsState NetworkTCPPacketSocketHandler::SendPackets(bool closing_down)
 {
 	ssize_t res;
 	Packet *p;
@@ -146,7 +146,7 @@ SendPacketsState NetworkTCPSocketHandler::SendPackets(bool closing_down)
  * Receives a packet for the given client
  * @return The received packet (or NULL when it didn't receive one)
  */
-Packet *NetworkTCPSocketHandler::ReceivePacket()
+Packet *NetworkTCPPacketSocketHandler::ReceivePacket()
 {
 	ssize_t res;
 
@@ -226,7 +226,7 @@ Packet *NetworkTCPSocketHandler::ReceivePacket()
  * @return \c true when there is something to receive.
  * @note Sets #writable if more data can be sent.
  */
-bool NetworkTCPSocketHandler::CanSendReceive()
+bool NetworkTCPPacketSocketHandler::CanSendReceive()
 {
 	fd_set read_fd, write_fd;
 	struct timeval tv;

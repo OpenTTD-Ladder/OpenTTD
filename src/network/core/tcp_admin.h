@@ -15,7 +15,7 @@
 #define NETWORK_CORE_TCP_ADMIN_H
 
 #include "os_abstraction.h"
-#include "tcp.h"
+#include "tcp_packet.h"
 #include "../network_type.h"
 #include "../../core/pool_type.hpp"
 
@@ -111,7 +111,7 @@ enum AdminCompanyRemoveReason {
 };
 
 /** Main socket handler for admin related connections. */
-class NetworkAdminSocketHandler : public NetworkTCPSocketHandler {
+class NetworkAdminSocketHandler : public NetworkTCPPacketSocketHandler {
 protected:
 	char admin_name[NETWORK_CLIENT_NAME_LENGTH];           ///< Name of the admin.
 	char admin_version[NETWORK_REVISION_LENGTH];           ///< Version string of the admin.

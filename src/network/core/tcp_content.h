@@ -15,8 +15,9 @@
 #define NETWORK_CORE_TCP_CONTENT_H
 
 #include "os_abstraction.h"
-#include "tcp.h"
+#include "address.h"
 #include "packet.h"
+#include "tcp_packet.h"
 #include "../../debug.h"
 
 #ifdef ENABLE_NETWORK
@@ -97,7 +98,7 @@ struct ContentInfo {
 };
 
 /** Base socket handler for all Content TCP sockets */
-class NetworkContentSocketHandler : public NetworkTCPSocketHandler {
+class NetworkContentSocketHandler : public NetworkTCPPacketSocketHandler {
 protected:
 	NetworkAddress client_addr; ///< The address we're connected to.
 	virtual void Close();
@@ -198,7 +199,7 @@ public:
 	 * @param address IP etc. of the client
 	 */
 	NetworkContentSocketHandler(SOCKET s = INVALID_SOCKET, const NetworkAddress &address = NetworkAddress()) :
-		NetworkTCPSocketHandler(s),
+		NetworkTCPPacketSocketHandler(s),
 		client_addr(address)
 	{
 	}

@@ -8,57 +8,15 @@
  */
 
 /**
- * @file tcp.h Basic functions to receive and send TCP packets.
+ * @file tcp_connecter.h Basic functions to connect to a TCP server.
  */
 
-#ifndef NETWORK_CORE_TCP_H
-#define NETWORK_CORE_TCP_H
+#ifndef NETWORK_CORE_TCP_CONNECTER_H
+#define NETWORK_CORE_TCP_CONNECTER_H
 
 #include "address.h"
-#include "packet.h"
 
 #ifdef ENABLE_NETWORK
-
-/** The states of sending the packets. */
-enum SendPacketsState {
-	SPS_CLOSED,      ///< The connection got closed.
-	SPS_NONE_SENT,   ///< The buffer is still full, so no (parts of) packets could be sent.
-	SPS_PARTLY_SENT, ///< The packets are partly sent; there are more packets to be sent in the queue.
-	SPS_ALL_SENT,    ///< All packets in the queue are sent.
-};
-
-/** Base socket handler for all TCP sockets */
-class NetworkTCPSocketHandler : public NetworkSocketHandler {
-private:
-	Packet *packet_queue;     ///< Packets that are awaiting delivery
-	Packet *packet_recv;      ///< Partially received packet
-public:
-	SOCKET sock;              ///< The socket currently connected to
-	bool writable;            ///< Can we write to this socket?
-
-	/**
-	 * Whether this socket is currently bound to a socket.
-	 * @return true when the socket is bound, false otherwise
-	 */
-	bool IsConnected() const { return this->sock != INVALID_SOCKET; }
-
-	virtual NetworkRecvStatus CloseConnection(bool error = true);
-	virtual void SendPacket(Packet *packet);
-	SendPacketsState SendPackets(bool closing_down = false);
-
-	virtual Packet *ReceivePacket();
-
-	bool CanSendReceive();
-
-	/**
-	 * Whether there is something pending in the send queue.
-	 * @return true when something is pending in the send queue.
-	 */
-	bool HasSendQueue() { return this->packet_queue != NULL; }
-
-	NetworkTCPSocketHandler(SOCKET s = INVALID_SOCKET);
-	~NetworkTCPSocketHandler();
-};
 
 /**
  * "Helper" class for creating TCP connections in a non-blocking manner
@@ -101,4 +59,4 @@ public:
 
 #endif /* ENABLE_NETWORK */
 
-#endif /* NETWORK_CORE_TCP_H */
+#endif /* NETWORK_CORE_TCP_CONNECTER_H */

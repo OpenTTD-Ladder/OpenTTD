@@ -4208,14 +4208,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\..\src\network\core\tcp.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\..\src\network\core\tcp.h"
-				>
-			</File>
-			<File
 				RelativePath=".\..\src\network\core\tcp_admin.cpp"
 				>
 			</File>
@@ -4224,7 +4216,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\..\src\network\core\tcp_connect.cpp"
+				RelativePath=".\..\src\network\core\tcp_connecter.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\..\src\network\core\tcp_connecter.h"
 				>
 			</File>
 			<File
@@ -4253,6 +4249,14 @@
 			</File>
 			<File
 				RelativePath=".\..\src\network\core\tcp_listen.h"
+				>
+			</File>
+			<File
+				RelativePath=".\..\src\network\core\tcp_packet.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\..\src\network\core\tcp_packet.h"
 				>
 			</File>
 			<File

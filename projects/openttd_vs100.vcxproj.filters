@@ -2862,21 +2862,18 @@
     <ClInclude Include="..\src\network\core\packet.h">
       <Filter>Network Core</Filter>
     </ClInclude>
-    <ClCompile Include="..\src\network\core\tcp.cpp">
-      <Filter>Network Core</Filter>
-    </ClCompile>
-    <ClInclude Include="..\src\network\core\tcp.h">
-      <Filter>Network Core</Filter>
-    </ClInclude>
     <ClCompile Include="..\src\network\core\tcp_admin.cpp">
       <Filter>Network Core</Filter>
     </ClCompile>
     <ClInclude Include="..\src\network\core\tcp_admin.h">
       <Filter>Network Core</Filter>
     </ClInclude>
-    <ClCompile Include="..\src\network\core\tcp_connect.cpp">
+    <ClCompile Include="..\src\network\core\tcp_connecter.cpp">
       <Filter>Network Core</Filter>
     </ClCompile>
+    <ClInclude Include="..\src\network\core\tcp_connecter.h">
+      <Filter>Network Core</Filter>
+    </ClInclude>
     <ClCompile Include="..\src\network\core\tcp_content.cpp">
       <Filter>Network Core</Filter>
     </ClCompile>
@@ -2896,6 +2893,12 @@
       <Filter>Network Core</Filter>
     </ClInclude>
     <ClInclude Include="..\src\network\core\tcp_listen.h">
+      <Filter>Network Core</Filter>
+    </ClInclude>
+    <ClCompile Include="..\src\network\core\tcp_packet.cpp">
+      <Filter>Network Core</Filter>
+    </ClCompile>
+    <ClInclude Include="..\src\network\core\tcp_packet.h">
       <Filter>Network Core</Filter>
     </ClInclude>
     <ClCompile Include="..\src\network\core\udp.cpp">

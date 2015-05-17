@@ -1018,11 +1018,10 @@ network/core/host.h
 network/core/os_abstraction.h
 network/core/packet.cpp
 network/core/packet.h
-network/core/tcp.cpp
-network/core/tcp.h
 network/core/tcp_admin.cpp
 network/core/tcp_admin.h
-network/core/tcp_connect.cpp
+network/core/tcp_connecter.cpp
+network/core/tcp_connecter.h
 network/core/tcp_content.cpp
 network/core/tcp_content.h
 network/core/tcp_game.cpp
@@ -1030,6 +1029,8 @@ network/core/tcp_game.h
 network/core/tcp_http.cpp
 network/core/tcp_http.h
 network/core/tcp_listen.h
+network/core/tcp_packet.cpp
+network/core/tcp_packet.h
 network/core/udp.cpp
 network/core/udp.h
 
