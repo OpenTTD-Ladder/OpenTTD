@@ -15,7 +15,7 @@
 #define NETWORK_CORE_TCP_GAME_H
 
 #include "os_abstraction.h"
-#include "tcp.h"
+#include "tcp_packet.h"
 #include "../network_type.h"
 #include "../../core/pool_type.hpp"
 
@@ -149,7 +149,7 @@ public:
 };
 
 /** Base socket handler for all TCP sockets */
-class NetworkGameSocketHandler : public NetworkTCPSocketHandler {
+class NetworkGameSocketHandler : public NetworkTCPPacketSocketHandler {
 /* TODO: rewrite into a proper class */
 private:
 	NetworkClientInfo *info;  ///< Client info related to this socket

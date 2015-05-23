@@ -209,7 +209,7 @@ struct PacketWriter : SaveFilter {
 		/* Fast-track the size to the client. */
 		Packet *p = new Packet(PACKET_SERVER_MAP_SIZE);
 		p->Send_uint32((uint32)this->total_size);
-		this->cs->NetworkTCPSocketHandler::SendPacket(p);
+		this->cs->NetworkTCPPacketSocketHandler::SendPacket(p);
 
 		if (this->mutex != NULL) this->mutex->EndCritical();
 	}
@@ -254,7 +254,7 @@ Packet *ServerNetworkGameSocketHandler::ReceivePacket()
 
 	/* We can receive a packet, so try that and if needed account for
 	 * the amount of received data. */
-	Packet *p = this->NetworkTCPSocketHandler::ReceivePacket();
+	Packet *p = this->NetworkTCPPacketSocketHandler::ReceivePacket();
 	if (p != NULL) this->receive_limit -= p->size;
 	return p;
 }

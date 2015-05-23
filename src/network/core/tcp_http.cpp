@@ -37,29 +37,16 @@ static SmallVector<NetworkHTTPSocketHandler *, 1> _http_connections;
 NetworkHTTPSocketHandler::NetworkHTTPSocketHandler(SOCKET s,
 		HTTPCallback *callback, const char *host, const char *url,
 		const char *data, int depth) :
-	NetworkSocketHandler(),
+    NetworkTLSSocketHandler(s),
 	recv_pos(0),
 	recv_length(0),
 	callback(callback),
 	data(data),
-	redirect_depth(depth),
-	sock(s)
+	url(url),
+	host(stredup(host)),
+	redirect_depth(depth)
 {
-	size_t bufferSize = strlen(url) + strlen(host) + strlen(_openttd_revision) + (data == NULL ? 0 : strlen(data)) + 128;
-	char *buffer = AllocaM(char, bufferSize);
-
-	DEBUG(net, 7, "[tcp/http] requesting %s%s", host, url);
-	if (data != NULL) {
-		seprintf(buffer, buffer + bufferSize - 1, "POST %s HTTP/1.0\r\nHost: %s\r\nUser-Agent: OpenTTD/%s\r\nContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s\r\n", url, host, _openttd_revision, (int)strlen(data), data);
-	} else {
-		seprintf(buffer, buffer + bufferSize - 1, "GET %s HTTP/1.0\r\nHost: %s\r\nUser-Agent: OpenTTD/%s\r\n\r\n", url, host, _openttd_revision);
-	}
-
-	ssize_t size = strlen(buffer);
-	ssize_t res = send(this->sock, (const char*)buffer, size, 0);
-	if (res != size) {
-		/* Sending all data failed. Socket can't handle this little bit
-		 * of information? Just fall back to the old system! */
+	if (!this->TLSHandshake(host)) {
 		this->callback->OnFailure();
 		delete this;
 		return;
@@ -68,20 +55,35 @@ NetworkHTTPSocketHandler::NetworkHTTPSocketHandler(SOCKET s,
 	*_http_connections.Append() = this;
 }
 
+bool NetworkHTTPSocketHandler::OnConnected() 
+{
+	size_t bufferSize = strlen(this->url) + strlen(this->host) + strlen(_openttd_revision) + (this->data == NULL ? 0 : strlen(this->data)) + 128;
+	char *buffer = AllocaM(char, bufferSize);
+
+	DEBUG(net, 7, "[tcp/http] requesting %s%s", host, url);
+	if (data != NULL) {
+		seprintf(buffer, buffer + bufferSize - 1, "POST %s HTTP/1.0\r\nHost: %s\r\nUser-Agent: OpenTTD/%s\r\nContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s\r\n", this->url, this->host, _openttd_revision, (int)strlen(this->data), this->data);
+	} else {
+		seprintf(buffer, buffer + bufferSize - 1, "GET %s HTTP/1.0\r\nHost: %s\r\nUser-Agent: OpenTTD/%s\r\n\r\n", this->url, this->host, _openttd_revision);
+	}
+
+	ssize_t size = strlen(buffer);
+	ssize_t res = this->send((const char*)buffer, size);
+	if (res != size) {
+		/* Sending all data failed. Socket can't handle this little bit
+		 * of information? Just fall back to the old system! */
+		return false;
+	}
+
+	return true;
+}
+
 /** Free whatever needs to be freed. */
 NetworkHTTPSocketHandler::~NetworkHTTPSocketHandler()
 {
-	this->CloseConnection();
-
-	if (this->sock != INVALID_SOCKET) closesocket(this->sock);
-	this->sock = INVALID_SOCKET;
 	free(this->data);
-}
-
-NetworkRecvStatus NetworkHTTPSocketHandler::CloseConnection(bool error)
-{
-	NetworkSocketHandler::CloseConnection(error);
-	return NETWORK_RECV_STATUS_OKAY;
+	free(this->host);
+	free(this->url);
 }
 
 /**
@@ -212,7 +214,7 @@ int NetworkHTTPSocketHandler::HandleHeader()
 	ParseConnectionString(&company, &port, hname);
 	if (company != NULL) return_error("[tcp/http] invalid hostname");
 
-	NetworkAddress address(hname, port == NULL ? 80 : atoi(port));
+	NetworkAddress address(hname, port == NULL ? 443 : atoi(port));
 
 	/* Restore the URL. */
 	*url = '/';
@@ -231,8 +233,11 @@ int NetworkHTTPSocketHandler::HandleHeader()
  */
 int NetworkHTTPSocketHandler::Receive()
 {
+	int ret = NetworkTLSSocketHandler::Receive();
+	if (ret != 0) return ret;
+
 	for (;;) {
-		ssize_t res = recv(this->sock, (char *)this->recv_buffer + this->recv_pos, lengthof(this->recv_buffer) - this->recv_pos, 0);
+		ssize_t res = this->recv((char *)this->recv_buffer + this->recv_pos, lengthof(this->recv_buffer) - this->recv_pos);
 		if (res == -1) {
 			int err = GET_LAST_ERROR();
 			if (err != EWOULDBLOCK) {

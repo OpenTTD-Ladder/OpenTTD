@@ -14,7 +14,7 @@
 #ifndef NETWORK_CORE_TCP_LISTEN_H
 #define NETWORK_CORE_TCP_LISTEN_H
 
-#include "tcp.h"
+#include "packet.h"
 #include "../network.h"
 #include "../../core/pool_type.hpp"
 #include "../../debug.h"
